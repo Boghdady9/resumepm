@@ -78,16 +78,16 @@ def create_cache_key(input_text):
     return f"RAG_QUERY: {input_text}"
 
 @tool
-def work_experience_to_pm_focused_entry(input_text):
+def rewrite_to_PM_focused(input_text):
     """
-    Converts an achievement/responsibility into an enhanced, PM-focused entry using retrieved context.
+    Converts any input text into an enhanced, PM-focused entry using retrieved context.
     Implements caching to improve performance for repeated queries.
 
     Args:
-        input_text (str): The original achievement/responsibility text to be enhanced.
+        input_text (str): The original text to be enhanced.
 
     Returns:
-        str: The enhanced, PM-focused achievement/responsibility entry.
+        str: The enhanced, PM-focused entry.
     """
     # Generate cache prompt
     cache_prompt = create_cache_key(input_text)
@@ -99,17 +99,30 @@ def work_experience_to_pm_focused_entry(input_text):
         return cached_result
 
     # Define system prompt template
-    system_prompt =(
-    "You are an assistant specialized in converting achievements and responsibilities into enhanced, PM-focused entries "
-    "that include quantifiable measures. Utilize the provided retrieved context to refine the original achievement or responsibility. "
-    "Ensure the final output aligns stylistically with the retrieved context, while incorporating measurable impacts such as "
-    "'enhanced the system by X%', 'reduced processing time by Y hours/days', or 'achieved Z% improvement in user engagement.' "
-    "Always maintain accuracy and do not introduce non-factual information or unrealistic metrics."
+    system_prompt = (
+    "You are a specialized assistant tasked with transforming input into PM-focused outputs. Strictly adhere to the following rules "
+    "based on the input type:"
     "\n\n"
-    "Provide concise sentence."
+    "**Professional Summary Input:**\n"
+    "- Create a concise 4-5 line paragraph summarizing PM expertise.\n"
+    "- Focus on achievements, measurable metrics, methodologies (e.g., Agile, Scrum), and leadership qualities.\n\n"
+    "**Work Experience Input:**\n"
+    "- Rewrite each point to highlight measurable and quantifiable metrics.\n"
+    "- Use the format: [Action Verb] + [Specific Task] + [Quantifiable Outcome] + [Strategic Context].\n"
+    "- Example: 'Reduced processing time by 25% through implementation of automated workflows.'\n"
+    "- Avoid repetition of skills or generic descriptions; tailor points to reflect PM-specific contributions.\n\n"
+    "- Make it a one concise sentence\n"
+    "**Skills Input:**\n"
+    "- Present skills in a structured list format, ensuring relevance to PM domains.\n"
+    "- Arrange skills in two columns if applicable, e.g.:\n"
+    "  [Skill 1]  [Skill 2]\n"
+    "  [Skill 3]  [Skill 4]\n\n"
+    "Ensure outputs are formatted appropriately and align with the input type. Do not mix content types.\n\n"
+    "Process the input according to its type and provide only the transformed section as the final answer."
     "\n\n"
     "{context}"
 )
+
 
 
     # Define chat prompt template
@@ -132,41 +145,6 @@ def work_experience_to_pm_focused_entry(input_text):
 
     return result['answer']
 
-
-
-@tool
-def rewrite_to_PM_focused(input_text):
-    """
-    Convert any part of a resume into a PM focused part\
-    and add PM relevant content
-
-    Args:
-          input_text (str): The original part text to be enhanced.
-
-      Returns:
-          str: The enhanced, PM-focused content.
-
-    """
-    # Define system prompt template
-    system_prompt = (
-        "You are an assistant specialized in converting resume sections (Professional Summary, Skills, etc.) into enhanced, PM-focused entries"
-        "When enhancing sections, focus on PM-relevant information (e.g., product strategy, cross-functional leadership, user-centric methodologies)."
-        "Maintain clarity and conciseness while aligning with the PM focus."
-        "Always maintain accuracy and do not introduce non-factual information or unrealistic metrics."
-        "Allow to technical skill be dominant"
-        "Be concise"
-        "\n\n"
-
-    )
-
-    # Define chat prompt template
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("human", "{input}"),
-    ])
-    chain = prompt | llm
-    result = chain.invoke({"input": input_text})
-    return result.content
 
 
 
